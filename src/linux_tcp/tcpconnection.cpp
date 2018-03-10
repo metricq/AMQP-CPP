@@ -29,6 +29,11 @@ TcpConnection::TcpConnection(TcpHandler *handler, const Address &address) :
     _connection(this, address.login(), address.vhost()) {}
 
 /**
+ *  Destructor
+ */
+TcpConnection::~TcpConnection() noexcept = default;
+
+/**
  *  The filedescriptor that is used for this connection
  *  @return int
  */
