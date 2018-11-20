@@ -23,6 +23,8 @@
 #include <functional>
 #include <memory>
 #include <system_error>
+#include <map>
+#include <iostream>
 
 #include <asio/basic_waitable_timer.hpp>
 #include <asio/io_service.hpp>
@@ -520,6 +522,26 @@ protected:
     }
 
 public:
+
+    virtual void onError(TcpConnection* connection, const char * message) override {
+        std::cerr << "ASIOHandler: onError: " << message << std::endl;
+        (void)connection;
+    }
+
+    virtual void onDetached(TcpConnection* connection) override {
+        std::cerr << "ASIOHandler: onDetached" << std::endl;
+        (void)connection;
+    }
+
+
+    virtual void onLost(TcpConnection* connection) override {
+        std::cerr << "ASIOHandler: onLost" << std::endl;
+        (void)connection;
+        _timer.reset();
+        _watchers.clear();
+    }
+
+public:
     /**
      *  Handler cannot be default constructed.
      *
@@ -556,6 +578,7 @@ public:
 
     void onClosed(TcpConnection* connection) override
     {
+        std::cerr << "ASIOHandler: onClosed" << std::endl;
         _timer.reset();
     }
 
