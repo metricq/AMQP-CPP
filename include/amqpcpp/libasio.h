@@ -184,7 +184,8 @@ private:
                 connection->process(fd, AMQP::readable);
 
                 // Avoid setting up too many read handlers if process already setup a read handler
-                if (!_read_pending)
+                // Also we should not read more if someone told us not to read any longer during process
+                if (!_read_pending && _read)
                 {
                     _read_pending = true;
                     _socket.async_read_some(asio::null_buffers(), get_read_handler(connection, fd));
@@ -219,9 +220,9 @@ private:
             {
                 connection->process(fd, AMQP::writable);
 
-                // Avoid setting up too many write handlers if process already setup a write
-                // handler
-                if (!_write_pending)
+                // Avoid setting up too many write handlers if process already setup a write handler
+                // Also we should not write more if someone told us not to write any longer during process
+                if (!_write_pending && _write)
                 {
                     _write_pending = true;
                     _socket.async_write_some(asio::null_buffers(), get_write_handler(connection, fd));
@@ -488,15 +489,17 @@ private:
             // explicitly set the events to monitor
             apWatcher->events(connection, fd, flags);
         }
-        else if (flags == 0)
-        {
-            // the watcher does already exist, but we no longer have to watch this watcher
-            _watchers.erase(iter);
-        }
         else
         {
             // Change the events on which to act.
             iter->second->events(connection, fd, flags);
+
+            if (flags == 0)
+            {
+                // the watcher does already exist, but we no longer have to watch this watcher
+                _watchers.erase(iter);
+            }
+
         }
     }
 
